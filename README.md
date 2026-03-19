@@ -60,13 +60,25 @@ p = doc.add_paragraph()
 # Signature: add_footnote(paragraph_object, text_before_note, note_text)
 adder.add_footnote(p, "Here is a standard statement", "This is the text for the footnote at the bottom of the page.")
 
-# 5. Add Endnote
-adder.add_endnote(p, " And a conclusion.", "This is the text for the endnote at the end of the document.")
+# 5. Add Endnote (Multiple Possibilities)
 
-# Smart Re-use:
-# By passing the EXACT same text to add_endnote, it creates an intelligent Word Cross-Reference!
+# A. Basic Endnote
+# Signature: add_endnote(paragraph_object, text_before_note, note_text)
+adder.add_endnote(p, " And a conclusion.", "This is the text for endnote #1.")
+
+# B. Add Multiple Distinct Endnotes
+adder.add_endnote(p, " Moving on to the next point.", "This is the text for endnote #2.")
+
+# C. Smart Re-use (Cross-referencing) Across Paragraphs
+# If you pass the EXACT SAME endnote text, it won't duplicate the endnote.
+# Instead, it will create a Word Native Cross-Reference (NOTEREF field) pointing back to the first one!
 p2 = doc.add_paragraph()
-adder.add_endnote(p2, "Referring back...", "This is the text for the endnote at the end of the document.")
+adder.add_endnote(p2, "Referring back to the first claim...", "This is the text for endnote #1.")
+
+# D. Smart Re-use Inside the Same Paragraph
+p3 = doc.add_paragraph()
+adder.add_endnote(p3, "We mention point 2", "This is the text for endnote #2.")
+adder.add_endnote(p3, " and again we mention point 2 right away.", "This is the text for endnote #2.")
 
 # 6. Save the Document object
 output_filename = "my_final_document.docx"
