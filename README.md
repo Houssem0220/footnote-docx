@@ -28,14 +28,22 @@ Because we edit inside the active zip file, the workflow is:
 
 ## Quickstart Guide
 
-### Step 1: Create the Template
+### Step 1: Provide a Pre-styled Template
 
-Before running the main scripts, you must generate the basic template with predefined Word Footnote/Endnote styles. Run this once:
+Microsoft Word requires specific internal XML settings for notes to render without corruption. You must **either** use an existing word file that already has had footnotes/endnotes added to it manually at least once, **or** programmatically generate a fresh template.
 
+**Option A (Recommended): Create a new template automatically**
+Run this script once to generate `footnote_template.docx` with all mandatory `FootnoteText`/`EndnoteReference` styles predefined:
 ```bash
 python create_template.py
 ```
-*This generates `footnote_template.docx` in your folder.*
+
+**Option B: Manual creation**
+If you want to use an existing customized Word document as your base:
+1. Open your document in MS Word.
+2. Manually add *one* footnote and *one* endnote anywhere in the document.
+3. Delete the text of those notes so it appears empty again (the hidden styles will remain).
+4. Save the file and use its path in Step 2.
 
 ### Step 2: Add Footnotes & Endnotes
 
