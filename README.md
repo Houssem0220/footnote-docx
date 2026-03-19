@@ -1,0 +1,85 @@
+# python-docx-footnotes
+
+An extension for `python-docx` that adds native Microsoft Word footnotes and endnotes support. It bypasses current library limitations by manually handling the underlying Object XML mapping (`lxml`) correctly, ensuring document validity and styling.
+
+## Key Features
+
+- **Native Word Footnotes**: Creates true `<w:footnote>` elements visible and manageable in MS Word.
+- **Native Word Endnotes**: Creates `<w:endnote>` elements appended appropriately to the document.
+- **Smart Endnote Reusability**: If you re-use the exact same string for an endnote, it automatically inserts a cross-reference field linking back to the original endnote instead of duplicating it.
+- **Numbering Styles**: Support for customizing Endnote cross-reference styles (e.g., lower Roman `i, ii` vs Arabic `1, 2`).
+- **Robustness**: Fixes document corruption loops in MS Word that typically happen when manually editing OpenXML for footnotes without maintaining relationship ids properly.
+
+## Prerequisites
+
+```bash
+pip install python-docx lxml
+```
+
+## How It Works
+
+Adding footnotes and endnotes to `.docx` files programmatically is heavily intertwined with MS Word's internal relations map files (`_rels/document.xml.rels`, `footnotes.xml`, etc.). 
+
+Because we edit inside the active zip file, the workflow is:
+1. **Initialize**: Generate a clean docx template explicitly pre-styled for footnotes/endnotes (`create_template.py`).
+2. **Inject Runs**: Add footnotes via the `FootnoteAdder` class in memory.
+3. **Save**: Save your doc using standard `doc.save()`.
+4. **Finalize**: Pass the saved file back to `FootnoteAdder` which extracts the zip, maps relations correctly to `footnotes.xml` & `endnotes.xml`, and compiles it back seamlessly.
+
+## Quickstart Guide
+
+### Step 1: Create the Template
+
+Before running the main scripts, you must generate the basic template with predefined Word Footnote/Endnote styles. Run this once:
+
+```bash
+python create_template.py
+```
+*This generates `footnote_template.docx` in your folder.*
+
+### Step 2: Add Footnotes & Endnotes
+
+Use the `FootnoteAdder` class alongside your standard `python-docx` Document logic.
+
+```python
+from docx import Document
+from footnote_adder import FootnoteAdder
+
+# 1. Load the pre-configured template
+doc = Document("footnote_template.docx")
+doc._body.clear_content()
+
+# 2. Instantiate the FootnoteAdder 
+# Optionally set endnote_style to 'roman' (default) or 'arabic' 
+adder = FootnoteAdder(endnote_style="roman")
+
+# 3. Standard Paragraph creation
+p = doc.add_paragraph()
+
+# 4. Add Footnote
+# Signature: add_footnote(paragraph_object, text_before_note, note_text)
+adder.add_footnote(p, "Here is a standard statement", "This is the text for the footnote at the bottom of the page.")
+
+# 5. Add Endnote
+adder.add_endnote(p, " And a conclusion.", "This is the text for the endnote at the end of the document.")
+
+# Smart Re-use:
+# By passing the EXACT same text to add_endnote, it creates an intelligent Word Cross-Reference!
+p2 = doc.add_paragraph()
+adder.add_endnote(p2, "Referring back...", "This is the text for the endnote at the end of the document.")
+
+# 6. Save the Document object
+output_filename = "my_final_document.docx"
+doc.save(output_filename)
+
+# 7. CRITICAL: Initialize XML linking on the saved document
+adder.finalize_footnotes(output_filename)
+
+print("Document generated successfully!")
+```
+
+## Demonstrations
+
+Two sample test cases are provided: 
+1. `python example.py` - Basic standard footnote/endnote layout.
+2. `python test_endnotes.py` - Strict testing scenario validating Endnote Sharing/Reference Reusability accross different configurations.
